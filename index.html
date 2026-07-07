@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema POS - Acceso Centralizado</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --bg-main: #f1f2f6;
+            --bg-card: #ffffff;
+            --text-dark: #2f3640;
+            --overlay-bg: rgba(44, 62, 80, 0.98);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ========================================= */
+        /* 1. INTERFAZ DE ACCESO ÚNICO (LOGIN / MENU)*/
+        /* ========================================= */
+        #welcome-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay-bg);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        #welcome-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .welcome-content {
+            text-align: center;
+            width: 100%;
+            max-width: 450px;
+            padding: 35px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.4);
+            box-sizing: border-box;
+        }
+
+        .welcome-logo {
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 25px;
+            filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.4));
+        }
+
+        .login-view, .menu-view {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .view-active { display: flex !important; }
+
+        /* Estilos del Formulario de Ingreso */
+        .login-view input {
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            font-size: 16px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            outline: none;
+        }
+        .login-view input::placeholder { color: #bdc3c7; }
+        .login-view input:focus { background: rgba(255,255,255,0.2); border-color: white; }
+
+        .btn-login {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-login:hover { background: #27ae60; }
+
+        /* Botones del Menú */
+        .welcome-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .btn-welcome {
+            background: white;
+            color: var(--primary);
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-welcome:hover { transform: translateY(-2px); background-color: #f8f9fa; }
+        .btn-welcome.cobrar { border-bottom: 4px solid var(--accent); color: #27ae60; }
+        .btn-welcome.registrar { border-bottom: 4px solid var(--warning); color: #e67e22; }
+        .btn-welcome.modificar { border-bottom: 4px solid var(--danger); color: #c0392b; }
+
+        .btn-logout {
+            background: transparent;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        .btn-logout:hover { background: #e74c3c; color: white; }
+
+        .badge-role {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .badge-role.admin { background: var(--warning); color: black; }
+        .badge-role.worker { background: var(--accent); color: white; }
+
+        /* ========================================= */
+        /* 2. PUNTO DE VENTA CORE (POS)              */
+        /* ========================================= */
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        header h1 { margin: 0; font-size: 20px; }
+
+        .main-layout { display: flex; flex: 1; overflow: hidden; }
+        .catalog-container { flex: 3; padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+
+        .search-bar {
+            background: var(--bg-card);
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .search-bar input, .search-bar select, .modal-body input, .modal-body select {
+            padding: 10px; border: 1px solid #ced4da; border-radius: 5px; font-size: 14px;
+        }
+        .search-bar input { flex: 1; }
+
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+
+        .product-card {
+            background: var(--bg-card); border-radius: 8px; padding: 15px; text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+            justify-content: space-between; border: 1px solid #e1e8ed; transition: transform 0.2s;
+        }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
+        .product-card .category { font-size: 11px; text-transform: uppercase; color: #7f8c8d; font-weight: bold; }
+        .product-card .name { font-size: 15px; font-weight: bold; margin: 8px 0; height: 40px; overflow: hidden; }
+        .product-card .price { font-size: 18px; color: var(--primary); font-weight: 700; margin-bottom: 8px; }
+        .product-card .stock { font-size: 12px; margin-bottom: 12px; }
+
+        .stock.low { color: var(--danger); font-weight: bold; }
+        .stock.ok { color: var(--accent); }
+
+        .btn-add-cart {
+            background: var(--primary); color: white; border: none; padding: 8px;
+            border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;
+        }
+        .btn-add-cart:hover { background: #34495e; }
+        .btn-add-cart:disabled { background: #bdc3c7; cursor: not-allowed; }
+
+        /* CARRITO */
+        .cart-container { flex: 1.2; background: var(--bg-card); border-left: 2px solid #e1e8ed; display: flex; flex-direction: column; }
+        .cart-header { padding: 15px; background: #f8f9fa; border-bottom: 1px solid #e1e8ed; font-weight: bold; font-size: 18px; display: flex; justify-content: space-between; }
+        .cart-items { flex: 1; overflow-y: auto; padding: 10px; }
+        
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
+        .cart-item-info { flex: 2; }
+        .cart-item-qty { flex: 1; text-align: center; font-weight: bold; }
+        .cart-item-price { flex: 1; text-align: right; font-weight: bold; }
+        
+        .btn-remove { background: none; border: none; color: var(--danger); cursor: pointer; font-weight: bold; margin-left: 5px; }
+
+        .cart-footer { padding: 20px; background: #f8f9fa; border-top: 1px solid #e1e8ed; }
+        .total-section { display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; margin-bottom: 15px; }
+        
+        .btn-checkout { background: var(--accent); color: white; font-size: 16px; font-weight: bold; border: none; width: 100%; padding: 12px; border-radius: 6px; cursor: pointer; }
+        .btn-checkout:hover { background: #27ae60; }
+
+        .btn-nav-back { background: rgba(255,255,255,0.1); border: 1px solid white; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+        .btn-nav-back:hover { background: white; color: var(--primary); }
+
+        /* MODAL ADMINISTRACIÓN */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 3000; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .modal-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; }
+        .modal-body { display: flex; flex-direction: column; gap: 15px; }
+        .modal-body label { font-weight: bold; font-size: 14px; }
+        .modal-body div { display: flex; flex-direction: column; gap: 5px; }
+        .modal-footer { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- ========================================= -->
+    <!-- 1. PANTALLA UNIFICADA DE ACCESO           -->
+    <!-- ========================================= -->
+    <div id="welcome-screen">
+        <div class="welcome-content">
+            <!-- Sigue usando tu imagen PNG aquí -->
+            <img src="beca.png" alt="Logo Control" class="welcome-logo">
+            
+            <!-- VISTA DE LOGIN ÚNICO -->
+            <div id="view-login" class="login-view view-active">
+                <h2 style="margin-bottom: 10px;">Ingreso al Sistema</h2>
+                <input type="text" id="login-user" placeholder="Nombre de usuario" required>
+                <input type="password" id="login-pass" placeholder="Contraseña" required>
+                <button class="btn-login" onclick="processLogin()">Ingresar</button>
+            </div>
+
+            <!-- VISTA DE MENÚ ADAPTADO AL ACCESO -->
+            <div id="view-menu" class="menu-view">
+                <h2 id="menu-title" style="margin-bottom: 15px;">Panel de Operaciones</h2>
+                <div class="welcome-options">
+                    <button class="btn-welcome cobrar" id="opt-cobrar" onclick="showPOS()">
+                        <span>🛒</span> IR A COBRAR
+                    </button>
+                    <button class="btn-welcome registrar" id="opt-registrar" onclick="openAdminModal('registrar')">
+                        <span>➕</span> REGISTRAR NUEVO
+                    </button>
+                    <button class="btn-welcome modificar" id="opt-modificar" onclick="openAdminModal('modificar')">
+                        <span>✏️</span> MODIFICAR PRODUCTO
+                    </button>
+                </div>
+                <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- 2. PUNTO DE VENTA CORE (POS)              -->
+    <!-- ========================================= -->
+    <header>
+        <div>
+            <button class="btn-nav-back" onclick="backToMenu()">⬅ Menu Principal</button>
+            <h1 style="display:inline-block; vertical-align:middle;">MiniMarket POS</h1>
+            <span id="role-badge" class="badge-role">TRABAJADOR</span>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <!-- CATÁLOGO -->
+        <div class="catalog-container">
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Buscar producto..." oninput="filterProducts()">
+                <select id="category-filter" onchange="filterProducts()">
+                    <option value="Todos">Todas las Categorías</option>
+                    <option value="Licor">Licores</option>
+                    <option value="Cerveza">Cervezas</option>
+                    <option value="Vino">Vinos</option>
+                    <option value="Gaseosas">Gaseosas / Aguas</option>
+                    <option value="Snacks">Snacks</option>
+                </select>
+            </div>
+            <div class="products-grid" id="products-grid"></div>
+        </div>
+
+        <!-- DETALLE DEL CARRITO -->
+        <div class="cart-container">
+            <div class="cart-header">
+                <span>Detalle de la Venta</span>
+                <span id="cart-count">0 items</span>
+            </div>
+            <div class="cart-items" id="cart-items"></div>
+            <div class="cart-footer">
+                <div class="total-section">
+                    <span>Total:</span>
+                    <span id="cart-total">S/. 0.00</span>
+                </div>
+                <button class="btn-checkout" onclick="checkoutSale()">✔ Confirmar Venta (Salida)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE ADMINISTRACIÓN -->
+    <div class="modal" id="admin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="modal-title-text">Registrar Nuevo Producto</span>
+                <button style="border:none; background:none; cursor:pointer; font-weight:bold;" onclick="closeModal()">X</button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <label>Nombre del Producto</label>
+                    <input type="text" id="prod-name" placeholder="Ej. Cristal 620ml">
+                </div>
+                <div>
+                    <label>Categoría</label>
+                    <select id="prod-category">
+                        <option value="Licor">Licor / Destilado</option>
+                        <option value="Cerveza">Cerveza</option>
+                        <option value="Vino">Vino</option>
+                        <option value="Gaseosas">Gaseosas / Aguas</option>
+                        <option value="Snacks">Snacks</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Stock / Lote que ingresa</label>
+                    <input type="number" id="prod-stock" min="1" value="10">
+                </div>
+                <div>
+                    <label>Precio de Venta (S/.)</label>
+                    <input type="number" id="prod-price" step="0.10" min="0" value="5.00">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button style="padding:8px 15px; border:none; background:#bdc3c7; border-radius:4px; cursor:pointer;" onclick="closeModal()">Cancelar</button>
+                <button style="padding:8px 15px; border:none; background:var(--primary); color:white; border-radius:4px; cursor:pointer;" onclick="saveAdminProduct()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN DE CREDENCIALES
+        const ADMIN_USER = "admin";
+        const ADMIN_PASS = "1234";
+
+        let isAdministrator = false;
+
+        function changeView(viewId) {
+            document.getElementById('view-login').style.display = 'none';
+            document.getElementById('view-menu').style.display = 'none';
+            document.getElementById(viewId).style.display = 'flex';
+        }
+
+        function processLogin() {
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value;
+
+            if(!user || !pass) return alert('Por favor, ingresa tus credenciales.');
+
+            const menuTitle = document.getElementById('menu-title');
+            const btnRegistrar = document.getElementById('opt-registrar');
+            const btnModificar = document.getElementById('opt-modificar');
+            const roleBadge = document.getElementById('role-badge');
+
+            // VALIDAR ROL
+            if (user === ADMIN_USER && pass === ADMIN_PASS) {
+                isAdministrator = true;
+                menuTitle.innerText = "Panel Gerente / Administrador";
+                btnRegistrar.style.display = "flex";
+                btnModificar.style.display = "flex";
+                roleBadge.innerText = "GERENTE / ADMIN";
+                roleBadge.className = "badge-role admin";
+                
+                changeView('view-menu'); // Muestra las opciones completas al administrador
+            } else {
+                isAdministrator = false;
+                roleBadge.innerText = "TRABAJADOR";
+                roleBadge.className = "badge-role worker";
+                
+                // Si es trabajador normal, salta el menú y lo manda DIRECTAMENTE al modulo de cobros
+                showPOS(); 
+            }
+        }
+
+        function logout() {
+            isAdministrator = false;
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+            changeView('view-login');
+            document.getElementById('welcome-screen').classList.remove('hidden');
+        }
+
+        function showPOS() {
+            document.getElementById('welcome-screen').classList.add('hidden');
+        }
+
+        function backToMenu() {
+            if (isAdministrator) {
+                document.getElementById('welcome-screen').classList.remove('hidden');
+                changeView('view-menu');
+            } else {
+                // Si un trabajador intenta regresar, se le desloguea directamente para proteger la app
+                logout();
+            }
+        }
+
+        // ========================================= 
+        // DATA & LÓGICA DEL NEGOCIO (LOCAL STORAGE)
+        // ========================================= 
+        let products = JSON.parse(localStorage.getItem('super_inventory')) || [
+            { name: "Pisco Cuatro Gallos 750ml", category: "Licor", price: 42.00, stock: 15 },
+            { name: "Cerveza Pilsen Trujillo 620ml", category: "Cerveza", price: 6.50, stock: 48 },
+            { name: "Whisky Johnnie Walker Black", category: "Licor", price: 110.00, stock: 4 },
+            { name: "Coca Cola Zero 1.5L", category: "Gaseosas", price: 5.50, stock: 24 }
+        ];
+        let cart = [];
+
+        function saveToStorage() { localStorage.setItem('super_inventory', JSON.stringify(products)); }
+
+        function renderCatalog(filteredProducts = products) {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+
+            filteredProducts.forEach(product => {
+                const realIndex = products.findIndex(p => p.name === product.name);
+                const isLow = product.stock <= 5;
+                const stockClass = isLow ? 'stock low' : 'stock ok';
+                const stockText = isLow ? `${product.stock} ¡Bajo Stock!` : `Stock: ${product.stock}`;
+
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <div>
+                        <span class="category">${product.category}</span>
+                        <div class="name">${product.name}</div>
+                    </div>
+                    <div>
+                        <div class="price">S/. ${product.price.toFixed(2)}</div>
+                        <div class="${stockClass}">${stockText}</div>
+                        <button class="btn-add-cart" ${product.stock === 0 ? 'disabled' : ''} onclick="addToCart(${realIndex})">
+                            ${product.stock === 0 ? 'Agotado' : '⚡ Agregar'}
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterProducts() {
+            const searchText = document.getElementById('search-input').value.toLowerCase();
+            const categorySelected = document.getElementById('category-filter').value;
+            const filtered = products.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(searchText);
+                const matchesCategory = categorySelected === 'Todos' || p.category === categorySelected;
+                return matchesSearch && matchesCategory;
+            });
+            renderCatalog(filtered);
+        }
+
+        // MODAL CONFIGURACIÓN ADMIN
+        const adminModal = document.getElementById('admin-modal');
+        function openAdminModal(type) {
+            if(type === 'registrar') {
+                document.getElementById('modal-title-text').innerText = '➕ Registrar Nuevo Producto';
+                document.getElementById('prod-name').value = '';
+                document.getElementById('prod-stock').value = '10';
+            } else {
+                document.getElementById('modal-title-text').innerText = '✏️ Modificar por Nombre Exacto';
+            }
+            adminModal.style.display = 'flex';
+        }
+        function closeModal() { adminModal.style.display = 'none'; }
+
+        function saveAdminProduct() {
+            const name = document.getElementById('prod-name').value.trim();
+            const category = document.getElementById('prod-category').value;
+            const stock = parseInt(document.getElementById('prod-stock').value);
+            const price = parseFloat(document.getElementById('prod-price').value);
+
+            if(!name || isNaN(stock) || isNaN(price)) return alert('Completa todos los campos correctamente.');
+
+            const existing = products.find(p => p.name.toLowerCase() === name.toLowerCase());
+            if(existing) {
+                existing.stock += stock; 
+                existing.price = price;
+                existing.category = category;
+                alert('Inventario actualizado (Stock sumado).');
+            } else {
+                products.push({ name, category, price, stock });
+                alert('Producto registrado con éxito.');
+            }
+            saveToStorage(); renderCatalog(); closeModal();
+        }
+
+        // CARRITO LÓGICA
+        function addToCart(index) {
+            const product = products[index];
+            const cartItem = cart.find(item => item.name === product.name);
+            const currentQtyInCart = cartItem ? cartItem.qty : 0;
+
+            if (product.stock > currentQtyInCart) {
+                if (cartItem) cartItem.qty++;
+                else cart.push({ ...product, originalIndex: index, qty: 1 });
+                renderCart();
+            } else {
+                alert('No hay suficiente stock físico.');
+            }
+        }
+
+        function removeFromCart(index) { cart.splice(index, 1); renderCart(); }
+
+        function renderCart() {
+            const cartItemsContainer = document.getElementById('cart-items');
+            cartItemsContainer.innerHTML = '';
+            let total = 0, totalItems = 0;
+
+            cart.forEach((item, index) => {
+                const subtotal = item.price * item.qty;
+                total += subtotal; totalItems += item.qty;
+                const row = document.createElement('div');
+                row.className = 'cart-item';
+                row.innerHTML = `
+                    <div class="cart-item-info">
+                        <strong>${item.name}</strong><br><small style="color:#7f8c8d">S/. ${item.price.toFixed(2)} c/u</small>
+                    </div>
+                    <div class="cart-item-qty">x${item.qty}</div>
+                    <div class="cart-item-price">S/. ${subtotal.toFixed(2)}
+                        <button class="btn-remove" onclick="removeFromCart(${index})">×</button>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(row);
+            });
+            document.getElementById('cart-total').innerText = `S/. ${total.toFixed(2)}`;
+            document.getElementById('cart-count').innerText = `${totalItems} items`;
+        }
+
+        function checkoutSale() {
+            if(cart.length === 0) return alert('El carrito está vacío.');
+            cart.forEach(item => { products[item.originalIndex].stock -= item.qty; });
+            alert('¡Venta completada con éxito!');
+            cart = []; saveToStorage(); renderCatalog(); renderCart();
+        }
+
+        // Carga de catálogo inicial
+        renderCatalog();
+        renderCart();
+    </script>
+</body>
+</html>

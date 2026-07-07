@@ -1,12 +1,12 @@
 :root {
-    --primary: #0f172a;       /* Negro azulado serio */
-    --secondary: #1e3a8a;     /* Azul oscuro dinámico */
+    --primary: #0f172a;       /* Negro azulado */
+    --secondary: #1e3a8a;     /* Azul oscuro */
     --accent: #2563eb;        /* Azul brillante */
     --bg-main: #f8fafc;       /* Blanco grisáceo */
     --bg-card: #ffffff;       /* Blanco puro */
     --text-dark: #334155;     /* Gris oscuro */
     --text-light: #94a3b8;    /* Gris claro */
-    --border-color: #cbd5e1;  /* Gris de borde */
+    --border-color: #cbd5e1;  /* Borde gris */
     --overlay-bg: rgba(15, 23, 42, 0.95);
 }
 
@@ -14,178 +14,83 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--bg-main);
     color: var(--text-dark);
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+    margin: 0; padding: 0;
+    display: flex; flex-direction: column;
+    height: 100vh; overflow: hidden;
 }
 
-/* ========================================= */
-/* 1. INTERFAZ DE ACCESO ÚNICO (LOGIN / MENU)*/
-/* ========================================= */
+/* 1. BIENVENIDA Y LOGIN */
 #welcome-screen {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: var(--overlay-bg);
-    color: white;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-    transition: opacity 0.3s, visibility 0.3s;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--overlay-bg); color: white;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    z-index: 2000; transition: opacity 0.3s, visibility 0.3s;
 }
-
-#welcome-screen.hidden {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-}
+#welcome-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
 .welcome-content {
-    text-align: center;
-    width: 100%;
-    max-width: 450px;
-    padding: 40px;
-    background: rgba(30, 58, 138, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-    box-sizing: border-box;
+    text-align: center; width: 100%; max-width: 450px; padding: 40px;
+    background: rgba(30, 58, 138, 0.2); border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); box-sizing: border-box;
 }
+.welcome-logo { max-width: 180px; height: auto; margin-bottom: 25px; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5)); }
 
-.welcome-logo {
-    max-width: 180px;
-    height: auto;
-    margin-bottom: 25px;
-    filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5));
-}
-
-.login-view, .menu-view {
-    display: none;
-    flex-direction: column;
-    gap: 15px;
-}
-
+.login-view, .menu-view { display: none; flex-direction: column; gap: 15px; }
 .view-active { display: flex !important; }
 
 .login-view input {
-    padding: 14px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 16px;
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
-    outline: none;
-    transition: all 0.2s;
+    padding: 14px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 16px;
+    background: rgba(255, 255, 255, 0.05); color: white; outline: none; transition: all 0.2s;
 }
 .login-view input::placeholder { color: #64748b; }
 .login-view input:focus { background: rgba(255, 255, 255, 0.15); border-color: var(--accent); }
 
 .btn-login {
-    background: var(--accent);
-    color: white;
-    border: none;
-    padding: 14px;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.2s;
+    background: var(--accent); color: white; border: none; padding: 14px;
+    font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background 0.2s;
 }
 .btn-login:hover { background: #1d4ed8; }
 
-.welcome-options {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-}
+.welcome-options { display: grid; grid-template-columns: 1fr; gap: 12px; }
 
 .btn-welcome {
-    background: var(--secondary);
-    color: white;
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 14px;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 6px;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+    background: var(--secondary); color: white; border: 1px solid rgba(255,255,255,0.1);
+    padding: 14px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer;
+    text-transform: uppercase; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;
 }
 .btn-welcome:hover { transform: translateY(-2px); background-color: var(--accent); }
 .btn-welcome.cobrar { background-color: #0f172a; border-left: 5px solid var(--accent); }
 .btn-welcome.registrar { background-color: #1e293b; border-left: 5px solid #64748b; }
 .btn-welcome.modificar { background-color: #334155; border-left: 5px solid #cbd5e1; }
+.btn-welcome.crear-usuario { background-color: #475569; border-left: 5px solid #94a3b8; }
 
 .btn-logout {
-    background: transparent;
-    color: #94a3b8;
-    border: 1px solid #475569;
-    padding: 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-top: 15px;
-    transition: all 0.2s;
+    background: transparent; color: #94a3b8; border: 1px solid #475569;
+    padding: 10px; border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 15px; transition: all 0.2s;
 }
 .btn-logout:hover { background: #334155; color: white; border-color: white; }
 
-.badge-role {
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: bold;
-    margin-left: 10px;
-    letter-spacing: 0.5px;
-}
+.badge-role { padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-left: 10px; letter-spacing: 0.5px; }
 .badge-role.admin { background: #334155; color: white; border: 1px solid var(--border-color); }
 .badge-role.worker { background: var(--secondary); color: white; }
 
-/* ========================================= */
-/* 2. PUNTO DE VENTA CORE (POS)              */
-/* ========================================= */
-header {
-    background-color: var(--primary);
-    color: white;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
+/* 2. PUNTO DE VENTA CORE */
+header { background-color: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
 header h1 { margin: 0; font-size: 22px; letter-spacing: 0.5px; }
 
 .main-layout { display: flex; flex: 1; overflow: hidden; }
 .catalog-container { flex: 3; padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
 
-.search-bar {
-    background: var(--bg-card);
-    padding: 15px;
-    border-radius: 6px;
-    display: flex;
-    gap: 15px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    border: 1px solid var(--border-color);
-}
-.search-bar input, .search-bar select, .modal-body input, .modal-body select {
-    padding: 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;
-    background-color: white; color: var(--text-dark);
-}
+.search-bar { background: var(--bg-card); padding: 15px; border-radius: 6px; display: flex; gap: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+.search-bar input, .search-bar select, .modal-body input, .modal-body select { padding: 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; background-color: white; color: var(--text-dark); }
 .search-bar input { flex: 1; }
 
 .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 15px; }
 
 .product-card {
     background: var(--bg-card); border-radius: 6px; padding: 18px; text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column;
-    justify-content: space-between; border: 1px solid var(--border-color); transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between;
+    border: 1px solid var(--border-color); transition: all 0.2s;
 }
 .product-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); border-color: var(--accent); }
 .product-card .category { font-size: 11px; text-transform: uppercase; color: var(--text-light); font-weight: bold; letter-spacing: 0.5px; }
@@ -196,10 +101,7 @@ header h1 { margin: 0; font-size: 22px; letter-spacing: 0.5px; }
 .stock.low { color: #475569; font-weight: bold; background: #cbd5e1; padding: 2px 6px; border-radius: 4px; display: inline-block; }
 .stock.ok { color: var(--text-light); }
 
-.btn-add-cart {
-    background: var(--primary); color: white; border: none; padding: 10px;
-    border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s;
-}
+.btn-add-cart { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s; }
 .btn-add-cart:hover { background: var(--accent); }
 .btn-add-cart:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
 

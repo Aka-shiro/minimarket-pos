@@ -1,9 +1,12 @@
-// REPLAZAR CON LA URL DE DESPLIEGUE COMO WEB APP DE TU GOOGLE APPS SCRIPT
+// --- CONFIGURACIÓN DE ENDPOINTS (Google Apps Script) ---
+// Reemplaza esta URL con el despliegue de tu SCRIPT 1 (Credenciales)
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwRUdCIHwy55K_7esO1SKbp7e2SVxndGDczKMYQ5SgjnbRabbrPkFmeXb9tOXiLz_QwEw/exec";
 
+// --- ESTADO DE LA APLICACIÓN ---
 let isAdministrator = false;
 let currentModalType = ''; // Almacena qué tipo de registro se guardará ('registrar', 'modificar' o 'usuario')
 
+// --- BASE DE DATOS LOCAL (INVENTARIO) ---
 let products = JSON.parse(localStorage.getItem('super_inventory')) || [
     { name: "Pisco Cuatro Gallos 750ml", category: "Licor", price: 42.00, stock: 15 },
     { name: "Cerveza Pilsen Trujillo 620ml", category: "Cerveza", price: 6.50, stock: 48 },
@@ -12,6 +15,7 @@ let products = JSON.parse(localStorage.getItem('super_inventory')) || [
 ];
 let cart = [];
 
+// --- INICIALIZACIÓN DE LA APP ---
 document.addEventListener("DOMContentLoaded", () => {
     renderCatalog();
     renderCart();
@@ -30,12 +34,35 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// --- CONTROL DE VISTAS (INTERFAZ) ---
 function changeView(viewId) {
     document.getElementById('view-login').style.display = 'none';
     document.getElementById('view-menu').style.display = 'none';
     document.getElementById(viewId).style.display = 'flex';
 }
 
+function showPOS() { 
+    document.getElementById('welcome-screen').classList.add('hidden'); 
+}
+
+function logout() {
+    isAdministrator = false;
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
+    changeView('view-login');
+    document.getElementById('welcome-screen').classList.remove('hidden');
+}
+
+function backToMenu() {
+    if (isAdministrator) {
+        document.getElementById('welcome-screen').classList.remove('hidden');
+        changeView('view-menu');
+    } else {
+        logout();
+    }
+}
+
+// --- AUTENTICACIÓN (LOGIN REMOTO) ---
 function processLoginRemote() {
     const user = document.getElementById('login-user').value.trim();
     const pass = document.getElementById('login-pass').value;
@@ -48,11 +75,11 @@ function processLoginRemote() {
 
     fetch(WEB_APP_URL, {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "text/plain" }, // text/plain evita errores de CORS con Apps Script
         body: JSON.stringify({ user: user, pass: pass })
     })
-    .then(() => {
+    .then(response => response.json())
+    .then(data => {
         const menuTitle = document.getElementById('menu-title');
         const btnRegistrar = document.getElementById('opt-registrar');
         const btnModificar = document.getElementById('opt-modificar');
@@ -62,21 +89,25 @@ function processLoginRemote() {
         btnAction.innerText = "Ingresar";
         btnAction.disabled = false;
 
-        // Validación y enrutamiento por roles según la cadena de entrada
-        if (user.toLowerCase() === "admin") {
-            isAdministrator = true;
-            menuTitle.innerText = "Panel Gerente / Administrador";
-            btnRegistrar.style.display = "flex";
-            btnModificar.style.display = "flex";
-            btnUsuarios.style.display = "flex"; // Muestra opción de usuarios
-            roleBadge.innerText = "GERENTE / ADMIN";
-            roleBadge.className = "badge-role admin";
-            changeView('view-menu');
+        // Validación basada en la respuesta real de la base de datos (Script 1)
+        if (data.success) {
+            if (data.role === "admin") {
+                isAdministrator = true;
+                menuTitle.innerText = "Panel Gerente / Administrador";
+                btnRegistrar.style.display = "flex";
+                btnModificar.style.display = "flex";
+                btnUsuarios.style.display = "flex"; 
+                roleBadge.innerText = "GERENTE / ADMIN";
+                roleBadge.className = "badge-role admin";
+                changeView('view-menu');
+            } else {
+                isAdministrator = false;
+                roleBadge.innerText = "TRABAJADOR";
+                roleBadge.className = "badge-role worker";
+                showPOS(); 
+            }
         } else {
-            isAdministrator = false;
-            roleBadge.innerText = "TRABAJADOR";
-            roleBadge.className = "badge-role worker";
-            showPOS(); 
+            alert("Usuario o contraseña incorrectos. Verifica tu base de datos.");
         }
     })
     .catch(error => {
@@ -87,26 +118,7 @@ function processLoginRemote() {
     });
 }
 
-function logout() {
-    isAdministrator = false;
-    document.getElementById('login-user').value = '';
-    document.getElementById('login-pass').value = '';
-    changeView('view-login');
-    document.getElementById('welcome-screen').classList.remove('hidden');
-}
-
-function showPOS() { document.getElementById('welcome-screen').classList.add('hidden'); }
-
-function backToMenu() {
-    if (isAdministrator) {
-        document.getElementById('welcome-screen').classList.remove('hidden');
-        changeView('view-menu');
-    } else {
-        logout();
-    }
-}
-
-// CONTROL MODAL UNIFICADO
+// --- CONTROL DE VENTANAS MODALES ---
 function openAdminModal(type) {
     currentModalType = type;
     const prodBody = document.getElementById('body-producto');
@@ -125,14 +137,16 @@ function openAdminModal(type) {
     } else if (type === 'usuario') {
         titleText.innerText = '👤 Crear Nuevo Usuario de Acceso';
         prodBody.style.display = 'none';
-        userBody.style.display = 'flex'; // Muestra inputs de usuario
+        userBody.style.display = 'flex'; 
         document.getElementById('new-user-name').value = '';
         document.getElementById('new-user-pass').value = '';
     }
     document.getElementById('admin-modal').style.display = 'flex';
 }
 
-function closeModal() { document.getElementById('admin-modal').style.display = 'none'; }
+function closeModal() { 
+    document.getElementById('admin-modal').style.display = 'none'; 
+}
 
 function saveAdminAction() {
     if (currentModalType === 'usuario') {
@@ -142,7 +156,7 @@ function saveAdminAction() {
     }
 }
 
-// PETICIÓN POST PARA CREAR USUARIO EN GOOGLE SHEETS
+// --- REGISTRO DE USUARIOS EN GOOGLE SHEETS ---
 function saveNewUserRemote() {
     const username = document.getElementById('new-user-name').value.trim();
     const pass = document.getElementById('new-user-pass').value.trim();
@@ -152,8 +166,7 @@ function saveNewUserRemote() {
 
     fetch(WEB_APP_URL, {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({
             action: "createUser",
             user: username,
@@ -161,9 +174,14 @@ function saveNewUserRemote() {
             role: role
         })
     })
-    .then(() => {
-        alert(`Usuario "${username}" enviado exitosamente a la base de datos.`);
-        closeModal();
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Usuario "${username}" registrado exitosamente en la base de datos.`);
+            closeModal();
+        } else {
+            alert("El servidor no pudo procesar el registro del usuario.");
+        }
     })
     .catch(error => {
         console.error("Error:", error);
@@ -171,6 +189,7 @@ function saveNewUserRemote() {
     });
 }
 
+// --- CONTROL DE PRODUCTOS (LOCAL EN ESTA FASE) ---
 function saveAdminProduct() {
     const name = document.getElementById('prod-name').value.trim();
     const category = document.getElementById('prod-category').value;
@@ -181,16 +200,20 @@ function saveAdminProduct() {
 
     const existing = products.find(p => p.name.toLowerCase() === name.toLowerCase());
     if(existing) {
-        existing.stock += stock; existing.price = price; existing.category = category;
+        existing.stock += stock; 
+        existing.price = price; 
+        existing.category = category;
         alert('Inventario actualizado.');
     } else {
         products.push({ name, category, price, stock });
         alert('Producto registrado.');
     }
     localStorage.setItem('super_inventory', JSON.stringify(products));
-    renderCatalog(); closeModal();
+    renderCatalog(); 
+    closeModal();
 }
 
+// --- RENDERIZADO Y TIENDA (CATÁLOGO / CARRITO) ---
 function renderCatalog(filteredProducts = products) {
     const grid = document.getElementById('products-grid');
     grid.innerHTML = '';
@@ -233,14 +256,22 @@ function addToCart(index) {
     } else alert('Sin stock físico disponible.');
 }
 
-function removeFromCart(index) { cart.splice(index, 1); renderCart(); }
+function removeFromCart(index) { 
+    cart.splice(index, 1); 
+    renderCart(); 
+}
 
 function renderCart() {
     const container = document.getElementById('cart-items');
-    container.innerHTML = ''; let total = 0, items = 0;
+    container.innerHTML = ''; 
+    let total = 0, items = 0;
+    
     cart.forEach((item, index) => {
-        const sub = item.price * item.qty; total += sub; items += item.qty;
-        const row = document.createElement('div'); row.className = 'cart-item';
+        const sub = item.price * item.qty; 
+        total += sub; 
+        items += item.qty;
+        const row = document.createElement('div'); 
+        row.className = 'cart-item';
         row.innerHTML = `<div class="cart-item-info"><strong>${item.name}</strong></div><div class="cart-item-qty">x${item.qty}</div><div class="cart-item-price">S/. ${sub.toFixed(2)}<button class="btn-remove" onclick="removeFromCart(${index})">×</button></div>`;
         container.appendChild(row);
     });
@@ -251,7 +282,9 @@ function renderCart() {
 function checkoutSale() {
     if(cart.length === 0) return alert('Carrito vacío.');
     cart.forEach(item => { products[item.originalIndex].stock -= item.qty; });
-    alert('Venta completada.'); cart = [];
+    alert('Venta completada.'); 
+    cart = [];
     localStorage.setItem('super_inventory', JSON.stringify(products));
-    renderCatalog(); renderCart();
+    renderCatalog(); 
+    renderCart();
 }

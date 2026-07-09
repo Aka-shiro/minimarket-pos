@@ -1,23 +1,18 @@
 // --- CONFIGURACIÓN DE ENDPOINTS (Google Apps Script) ---
-// Reemplaza esta URL con el despliegue de tu SCRIPT 1 (Credenciales)
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwRUdCIHwy55K_7esO1SKbp7e2SVxndGDczKMYQ5SgjnbRabbrPkFmeXb9tOXiLz_QwEw/exec";
+const AUTH_APP_URL = "https://script.google.com/macros/s/AKfycbwRUdCIHwy55K_7esO1SKbp7e2SVxndGDczKMYQ5SgjnbRabbrPkFmeXb9tOXiLz_QwEw/exec";
+// 🔴 REEMPLAZA ESTA URL CON EL DESPLIEGUE DE TU SCRIPT 2 (PRODUCTOS)
+const DATA_APP_URL = "https://script.google.com/macros/s/AKfycbw5L39AXCQnflqRx9g_UPXRFEQa9DdsKqj9UExmfM6zgCQqf0qdxyBxfKLfA8pT5lcS/exec";
 
 // --- ESTADO DE LA APLICACIÓN ---
 let isAdministrator = false;
-let currentModalType = ''; // Almacena qué tipo de registro se guardará ('registrar', 'modificar' o 'usuario')
+let currentModalType = ''; 
 
-// --- BASE DE DATOS LOCAL (INVENTARIO) ---
-let products = JSON.parse(localStorage.getItem('super_inventory')) || [
-    { name: "Pisco Cuatro Gallos 750ml", category: "Licor", price: 42.00, stock: 15 },
-    { name: "Cerveza Pilsen Trujillo 620ml", category: "Cerveza", price: 6.50, stock: 48 },
-    { name: "Whisky Johnnie Walker Black", category: "Licor", price: 110.00, stock: 4 },
-    { name: "Coca Cola Zero 1.5L", category: "Gaseosas", price: 5.50, stock: 24 }
-];
+let products = []; // Se cargará de forma dinámica desde Google Sheets 2
 let cart = [];
 
 // --- INICIALIZACIÓN DE LA APP ---
 document.addEventListener("DOMContentLoaded", () => {
-    renderCatalog();
+    loadProductsRemote(); // Trae el catálogo real de la nube
     renderCart();
 
     document.getElementById('search-input').addEventListener('input', filterProducts);
@@ -33,6 +28,25 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+// --- CARGAR PRODUCTOS DESDE LA NUBE (GET) ---
+function loadProductsRemote() {
+    fetch(DATA_APP_URL)
+    .then(response => response.json())
+    .then(data => {
+        products = data;
+        renderCatalog();
+    })
+    .catch(error => {
+        console.error("Error al cargar productos remotos:", error);
+        // Fallback en caso de error de red usando datos base
+        products = [
+            { name: "Pisco Cuatro Gallos 750ml", category: "Licor", price: 42.00, stock: 15 },
+            { name: "Cerveza Pilsen Trujillo 620ml", category: "Cerveza", price: 6.50, stock: 48 }
+        ];
+        renderCatalog();
+    });
+}
 
 // --- CONTROL DE VISTAS (INTERFAZ) ---
 function changeView(viewId) {
@@ -73,9 +87,9 @@ function processLoginRemote() {
     btnAction.innerText = "Verificando...";
     btnAction.disabled = true;
 
-    fetch(WEB_APP_URL, {
+    fetch(AUTH_APP_URL, {
         method: "POST",
-        headers: { "Content-Type": "text/plain" }, // text/plain evita errores de CORS con Apps Script
+        headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({ user: user, pass: pass })
     })
     .then(response => response.json())
@@ -89,7 +103,6 @@ function processLoginRemote() {
         btnAction.innerText = "Ingresar";
         btnAction.disabled = false;
 
-        // Validación basada en la respuesta real de la base de datos (Script 1)
         if (data.success) {
             if (data.role === "admin") {
                 isAdministrator = true;
@@ -152,11 +165,11 @@ function saveAdminAction() {
     if (currentModalType === 'usuario') {
         saveNewUserRemote();
     } else {
-        saveAdminProduct();
+        saveAdminProductRemote();
     }
 }
 
-// --- REGISTRO DE USUARIOS EN GOOGLE SHEETS ---
+// --- REGISTRO DE USUARIOS EN GOOGLE SHEETS 1 ---
 function saveNewUserRemote() {
     const username = document.getElementById('new-user-name').value.trim();
     const pass = document.getElementById('new-user-pass').value.trim();
@@ -164,7 +177,7 @@ function saveNewUserRemote() {
 
     if (!username || !pass) return alert('Por favor, completa todos los campos del usuario.');
 
-    fetch(WEB_APP_URL, {
+    fetch(AUTH_APP_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({
@@ -177,20 +190,18 @@ function saveNewUserRemote() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(`Usuario "${username}" registrado exitosamente en la base de datos.`);
+            alert(`Usuario "${username}" registrado exitosamente.`);
             closeModal();
-        } else {
-            alert("El servidor no pudo procesar el registro del usuario.");
         }
     })
     .catch(error => {
         console.error("Error:", error);
-        alert("Error al enviar el usuario a Google Sheets.");
+        alert("Error al enviar el usuario.");
     });
 }
 
-// --- CONTROL DE PRODUCTOS (LOCAL EN ESTA FASE) ---
-function saveAdminProduct() {
+// --- REGISTRO/EDICIÓN DE PRODUCTOS EN GOOGLE SHEETS 2 ---
+function saveAdminProductRemote() {
     const name = document.getElementById('prod-name').value.trim();
     const category = document.getElementById('prod-category').value;
     const stock = parseInt(document.getElementById('prod-stock').value);
@@ -198,19 +209,29 @@ function saveAdminProduct() {
 
     if(!name || isNaN(stock) || isNaN(price)) return alert('Completa todos los campos correctamente.');
 
-    const existing = products.find(p => p.name.toLowerCase() === name.toLowerCase());
-    if(existing) {
-        existing.stock += stock; 
-        existing.price = price; 
-        existing.category = category;
-        alert('Inventario actualizado.');
-    } else {
-        products.push({ name, category, price, stock });
-        alert('Producto registrado.');
-    }
-    localStorage.setItem('super_inventory', JSON.stringify(products));
-    renderCatalog(); 
-    closeModal();
+    fetch(DATA_APP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+            action: "saveProduct",
+            name: name,
+            category: category,
+            price: price,
+            stock: stock
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            alert(data.message);
+            loadProductsRemote(); // Recarga la lista desde la nube para actualizar la vista
+            closeModal();
+        }
+    })
+    .catch(error => {
+        console.error("Error al guardar producto:", error);
+        alert("Inconveniente al registrar producto en la nube.");
+    });
 }
 
 // --- RENDERIZADO Y TIENDA (CATÁLOGO / CARRITO) ---
@@ -279,12 +300,32 @@ function renderCart() {
     document.getElementById('cart-count').innerText = `${items} items`;
 }
 
+// --- CONFIRMAR VENTA EN LA NUBE ---
 function checkoutSale() {
     if(cart.length === 0) return alert('Carrito vacío.');
-    cart.forEach(item => { products[item.originalIndex].stock -= item.qty; });
-    alert('Venta completada.'); 
-    cart = [];
-    localStorage.setItem('super_inventory', JSON.stringify(products));
-    renderCatalog(); 
-    renderCart();
+    
+    // Mapeamos los elementos del carrito simplificados para el servidor
+    const cartData = cart.map(item => ({ name: item.name, qty: item.qty }));
+
+    fetch(DATA_APP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+            action: "checkout",
+            cart: cartData
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            alert('Venta procesada y stock actualizado en Google Sheets.');
+            cart = [];
+            renderCart();
+            loadProductsRemote(); // Sincroniza el inventario local tras la reducción de stock
+        }
+    })
+    .catch(error => {
+        console.error("Error al procesar la venta:", error);
+        alert("Ocurrió un problema al subir la venta.");
+    });
 }

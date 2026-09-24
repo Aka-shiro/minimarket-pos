@@ -7,7 +7,6 @@
   
   <!-- ESTILOS CSS TODO EN UNO -->
   <style>
-    /* Estilos Generales */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -90,7 +89,7 @@
 
     #chat-box {
       width: 350px;
-      height: 500px;
+      height: 540px;
       background-color: #ffffff;
       border-radius: 16px;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
@@ -197,23 +196,33 @@
       background-color: #0052a3;
     }
 
-    /* Botón especial para enviar por WhatsApp */
-    .btn-wsap {
+    /* Botones de WhatsApp */
+    .btn-wsap-msg {
       background-color: #25D366 !important;
       color: white !important;
       font-weight: bold;
-      width: 100%;
-      border-radius: 12px !important;
+      flex: 1;
     }
 
-    .btn-wsap:hover {
+    .btn-wsap-msg:hover {
       background-color: #128C7E !important;
+    }
+
+    .btn-wsap-call {
+      background-color: #075E54 !important;
+      color: white !important;
+      font-weight: bold;
+      flex: 1;
+    }
+
+    .btn-wsap-call:hover {
+      background-color: #05413a !important;
     }
   </style>
 </head>
 <body>
 
-  <!-- Encabezado de la página -->
+  <!-- Encabezado -->
   <header>
     <h1>Portal Académico / Proyecto Integrado</h1>
   </header>
@@ -224,7 +233,6 @@
       <h2>Bienvenido al Sistema Virtual</h2>
       <p>Explora nuestras herramientas y resuelve tus dudas académicas o de software con nuestro asistente de IA en tiempo real.</p>
       
-      <!-- Imagen de tu repositorio -->
       <img src="beca.png" alt="Información de Beca">
     </section>
   </main>
@@ -244,20 +252,27 @@
       </div>
       
       <div class="chat-input-area">
+        <!-- Fila 1: Consulta normal -->
         <div class="input-row">
           <input type="text" id="user-input" placeholder="Escribe tu consulta..." onkeypress="handleKeyPress(event)">
           <button onclick="sendMessage()">Enviar</button>
         </div>
         
+        <!-- Fila 2: Campo para número -->
         <div class="input-row">
-          <input type="text" id="phone-input" placeholder="N° WhatsApp (+51...)">
-          <button class="btn-wsap" onclick="sendToWhatsApp()">Enviar a WhatsApp 📱</button>
+          <input type="text" id="phone-input" placeholder="N° WhatsApp sin '+' (Ej: 51999999999)">
+        </div>
+
+        <!-- Fila 3: Botones Mensaje y Llamada WhatsApp -->
+        <div class="input-row">
+          <button class="btn-wsap-msg" onclick="sendWhatsAppMessage()">💬 Mensaje</button>
+          <button class="btn-wsap-call" onclick="makeWhatsAppCall()">📞 Llamar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- LOGICA JAVASCRIPT TODO EN UNO -->
+  <!-- LÓGICA JAVASCRIPT TODO EN UNO -->
   <script>
     let ultimaRespuestaIA = "";
 
@@ -307,7 +322,7 @@
       return msgId;
     }
 
-    // Simulación de respuestas de la IA (Entorno Académico e Ingeniería)
+    // Respuestas simuladas de la IA
     async function consultarAsistenteIA(consulta) {
       return new Promise((resolve) => {
         setTimeout(() => {
@@ -319,8 +334,6 @@
             resolve("Las fases principales son: Análisis de Requisitos, Diseño de Sistemas, Codificación, Pruebas y Mantenimiento.");
           } else if (query.includes('evaluacion') || query.includes('preguntas')) {
             resolve("Cuestionario de prueba: 1. ¿Qué es la arquitectura MVC? 2. ¿Diferencia entre SQL y NoSQL? 3. ¿Qué es una API REST?");
-          } else if (query.includes('investigacion') || query.includes('bibliografia')) {
-            resolve("Te recomiendo consultar Scopus o IEEE Xplore. Un libro clave es 'Ingeniería de Software' de Ian Sommerville.");
           } else {
             resolve("Hola. Como asistente de Ingeniería de Sistemas, estoy listo para guiarte en tus consultas sobre proyectos, metodologías o evaluaciones.");
           }
@@ -328,27 +341,37 @@
       });
     }
 
-    // Función para enviar la respuesta por WhatsApp Web sin registros
-    function sendToWhatsApp() {
+    // 📩 1. Enviar Mensaje de WhatsApp
+    function sendWhatsAppMessage() {
       const phoneInput = document.getElementById('phone-input');
-      const phoneNumber = phoneInput.value.trim().replace(/\s+/g, '');
+      const phoneNumber = phoneInput.value.trim().replace(/[^0-9]/g, '');
 
       if (!phoneNumber) {
-        alert("Por favor ingresa un número de teléfono con código de país (Ejemplo: +51999999999).");
+        alert("Ingresa un número de teléfono válido (Ejemplo para Perú: 51999999999).");
         return;
       }
 
-      if (!ultimaRespuestaIA) {
-        alert("Primero realiza una pregunta en el chat para obtener la respuesta que enviarás por WhatsApp.");
+      const textoEnviar = ultimaRespuestaIA 
+        ? `🤖 *Asistente Académico IA*\n\n${ultimaRespuestaIA}`
+        : "Hola, deseo realizar una consulta académica.";
+
+      const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(textoEnviar)}`;
+      window.open(url, '_blank');
+    }
+
+    // 📞 2. Abrir chat / Iniciar llamada por WhatsApp
+    function makeWhatsAppCall() {
+      const phoneInput = document.getElementById('phone-input');
+      const phoneNumber = phoneInput.value.trim().replace(/[^0-9]/g, '');
+
+      if (!phoneNumber) {
+        alert("Ingresa un número de teléfono válido (Ejemplo para Perú: 51999999999).");
         return;
       }
 
-      // Crear URL oficial de la API de WhatsApp
-      const mensajeEncoded = encodeURIComponent(`🤖 *Asistente Académico IA*\n\n${ultimaRespuestaIA}`);
-      const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${mensajeEncoded}`;
-
-      // Abrir en una nueva pestaña
-      window.open(whatsappUrl, '_blank');
+      // Abre directamente el contacto en WhatsApp para llamar
+      const url = `https://wa.me/${phoneNumber}`;
+      window.open(url, '_blank');
     }
   </script>
 </body>

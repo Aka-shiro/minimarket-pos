@@ -1,142 +1,288 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema POS - Acceso Centralizado</title>
-    <link rel="stylesheet" href="css/estilo.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimarket / Asistente Académico UTP</title>
+  
+  <!-- Estilos principales -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <style>
+    /* Estilos base para la página principal */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f6f9;
+      color: #333;
+    }
+
+    header {
+      background-color: #1a252f;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .hero {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .hero img {
+      max-width: 200px;
+      height: auto;
+      margin-top: 15px;
+      border-radius: 8px;
+    }
+
+    /* Estilos del Widget de Chat IA */
+    #ai-chat-widget {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      font-family: Arial, sans-serif;
+      z-index: 1000;
+    }
+
+    #chat-toggle-btn {
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: transform 0.2s, background-color 0.2s;
+    }
+
+    #chat-toggle-btn:hover {
+      transform: scale(1.05);
+      background-color: #0052a3;
+    }
+
+    #chat-box {
+      width: 340px;
+      height: 450px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: absolute;
+      bottom: 60px;
+      right: 0;
+    }
+
+    .chat-hidden {
+      display: none !important;
+    }
+
+    .chat-header {
+      background-color: #0066cc;
+      color: white;
+      padding: 12px 15px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-header button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background-color: #f9f9f9;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .message.bot {
+      background-color: #e9ecef;
+      color: #333;
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+    }
+
+    .message.user {
+      background-color: #0066cc;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+
+    .chat-input-area {
+      display: flex;
+      padding: 10px;
+      background-color: #ffffff;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .chat-input-area input {
+      flex: 1;
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+      border-radius: 20px;
+      outline: none;
+      font-size: 13px;
+    }
+
+    .chat-input-area button {
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      margin-left: 8px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .chat-input-area button:hover {
+      background-color: #0052a3;
+    }
+  </style>
 </head>
 <body>
 
-    <div id="welcome-screen">
-        <div class="welcome-content">
-            <img src="beca.png" alt="Logo Control" class="welcome-logo">
-            
-            <div id="view-login" class="login-view view-active">
-                <h2 style="margin-bottom: 10px; color: white;">Ingreso al Sistema</h2>
-                <input type="text" id="login-user" placeholder="Nombre de usuario" required>
-                <input type="password" id="login-pass" placeholder="Contraseña" required>
-                <button class="btn-login" id="btn-login-action" onclick="processLoginRemote()">Ingresar</button>
-            </div>
+  <!-- Encabezado de la página -->
+  <header>
+    <h1>Portal Académico / Proyecto Integrado</h1>
+  </header>
 
-            <div id="view-menu" class="menu-view">
-                <h2 id="menu-title" style="margin-bottom: 15px; color: white;">Panel de Operaciones</h2>
-                <div class="welcome-options">
-                    <button class="btn-welcome cobrar" id="opt-cobrar" onclick="showPOS()">
-                        <span>🛒</span> IR A COBRAR
-                    </button>
-                    <button class="btn-welcome registrar" id="opt-registrar" onclick="openAdminModal('registrar')">
-                        <span>➕</span> REGISTRAR NUEVO
-                    </button>
-                    <button class="btn-welcome modificar" id="opt-modificar" onclick="openAdminModal('modificar')">
-                        <span>✏️</span> MODIFICAR PRODUCTO
-                    </button>
-                    <button class="btn-welcome crear-usuario" id="opt-usuarios" onclick="openAdminModal('usuario')">
-                        <span>👤</span> CREAR USUARIO
-                    </button>
-                </div>
-                <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
-            </div>
-        </div>
+  <!-- Contenido principal -->
+  <main>
+    <section class="hero">
+      <h2>Bienvenido al Sistema Virtual</h2>
+      <p>Explora nuestras herramientas y resuelve tus dudas académicas o de software con nuestro asistente de IA en tiempo real.</p>
+      
+      <!-- Imagen de tu repositorio -->
+      <img src="beca.png" alt="Información de Beca">
+    </section>
+  </main>
+
+  <!-- Widget Flotante del Asistente de IA -->
+  <div id="ai-chat-widget">
+    <button id="chat-toggle-btn" onclick="toggleChat()">💬 Asistente IA</button>
+    
+    <div id="chat-box" class="chat-hidden">
+      <div class="chat-header">
+        <span>🤖 Asistente Académico</span>
+        <button onclick="toggleChat()">✖</button>
+      </div>
+      <div id="chat-messages" class="chat-messages">
+        <div class="message bot">¡Hola! Soy tu asistente de Inteligencia Artificial. ¿En qué consulta académica o de software te puedo ayudar hoy?</div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" id="user-input" placeholder="Escribe tu mensaje..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Enviar</button>
+      </div>
     </div>
+  </div>
 
-    <header>
-        <div>
-            <button class="btn-nav-back" onclick="backToMenu()">⬅ Menu Principal</button>
-            <h1 style="display:inline-block; vertical-align:middle;">MiniMarket POS</h1>
-            <span id="role-badge" class="badge-role">TRABAJADOR</span>
-        </div>
-    </header>
+  <!-- Scripts principales -->
+  <script src="js/main.js"></script>
+  
+  <script>
+    // Lógica interactiva integrada del Chat
+    function toggleChat() {
+      const chatBox = document.getElementById('chat-box');
+      chatBox.classList.toggle('chat-hidden');
+    }
 
-    <div class="main-layout">
-        <div class="catalog-container">
-            <div class="search-bar">
-                <input type="text" id="search-input" placeholder="Buscar producto..." oninput="filterProducts()">
-                <select id="category-filter" onchange="filterProducts()">
-                    <option value="Todos">Todas las Categorías</option>
-                    <option value="Licor">Licores</option>
-                    <option value="Cerveza">Cervezas</option>
-                    <option value="Vino">Vinos</option>
-                    <option value="Gaseosas">Gaseosas / Aguas</option>
-                    <option value="Snacks">Snacks</option>
-                </select>
-            </div>
-            <div class="products-grid" id="products-grid"></div>
-        </div>
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    }
 
-        <div class="cart-container">
-            <div class="cart-header">
-                <span>Detalle de la Venta</span>
-                <span id="cart-count">0 items</span>
-            </div>
-            <div class="cart-items" id="cart-items"></div>
-            <div class="cart-footer">
-                <div class="total-section">
-                    <span>Total:</span>
-                    <span id="cart-total">S/. 0.00</span>
-                </div>
-                <button class="btn-checkout" onclick="checkoutSale()">✔ Confirmar Venta (Salida)</button>
-            </div>
-        </div>
-    </div>
+    async function sendMessage() {
+      const input = document.getElementById('user-input');
+      const messageText = input.value.trim();
+      
+      if (!messageText) return;
 
-    <div class="modal" id="admin-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span id="modal-title-text">Registrar Nuevo Producto</span>
-                <button style="border:none; background:none; cursor:pointer; font-weight:bold; font-size: 16px;" onclick="closeModal()">X</button>
-            </div>
-            
-            <div class="modal-body" id="body-producto">
-                <div>
-                    <label>Nombre del Producto</label>
-                    <input type="text" id="prod-name" placeholder="Ej. Cristal 620ml">
-                </div>
-                <div>
-                    <label>Categoría</label>
-                    <select id="prod-category">
-                        <option value="Licor">Licor / Destilado</option>
-                        <option value="Cerveza">Cerveza</option>
-                        <option value="Vino">Vino</option>
-                        <option value="Gaseosas">Gaseosas / Aguas</option>
-                        <option value="Snacks">Snacks</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Stock / Lote que ingresa</label>
-                    <input type="number" id="prod-stock" min="1" value="10">
-                </div>
-                <div>
-                    <label>Precio de Venta (S/.)</label>
-                    <input type="number" id="prod-price" step="0.10" min="0" value="5.00">
-                </div>
-            </div>
+      // Mostrar mensaje del usuario
+      appendMessage(messageText, 'user');
+      input.value = '';
 
-            <div class="modal-body" id="body-usuario" style="display: none;">
-                <div>
-                    <label>Nombre de Usuario</label>
-                    <input type="text" id="new-user-name" placeholder="Ej. jperez">
-                </div>
-                <div>
-                    <label>Contraseña del Usuario</label>
-                    <input type="password" id="new-user-pass" placeholder="Mínimo 4 caracteres">
-                </div>
-                <div>
-                    <label>Rol asignado</label>
-                    <select id="new-user-role">
-                        <option value="worker">Trabajador (Solo Ventas)</option>
-                        <option value="admin">Administrador / Gerente</option>
-                    </select>
-                </div>
-            </div>
+      // Mostrar estado "Pensando..."
+      const loadingId = appendMessage('Pensando...', 'bot');
 
-            <div class="modal-footer">
-                <button style="padding:8px 15px; border:none; background:#bdc3c7; border-radius:4px; cursor:pointer;" onclick="closeModal()">Cancelar</button>
-                <button style="padding:8px 15px; border:none; background:var(--primary); color:white; border-radius:4px; cursor:pointer;" onclick="saveAdminAction()">Guardar Cambios</button>
-            </div>
-        </div>
-    </div>
+      try {
+        const responseText = await consultarAsistenteIA(messageText);
+        document.getElementById(loadingId).innerText = responseText;
+      } catch (error) {
+        document.getElementById(loadingId).innerText = 'Ocurrió un error al procesar tu consulta.';
+      }
+    }
 
-    <script src="js/app.js"></script>
+    function appendMessage(text, sender) {
+      const messagesContainer = document.getElementById('chat-messages');
+      const msgDiv = document.createElement('div');
+      const msgId = 'msg-' + Date.now();
+      
+      msgDiv.id = msgId;
+      msgDiv.classList.add('message', sender);
+      msgDiv.innerText = text;
+      
+      messagesContainer.appendChild(msgDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      
+      return msgId;
+    }
+
+    // Simulación de respuestas contextuales de la IA (Ingeniería de Sistemas / Software)
+    async function consultarAsistenteIA(consulta) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const query = consulta.toLowerCase();
+          
+          if (query.includes('proyecto') || query.includes('software')) {
+            resolve("Para elaborar un proyecto de software: 1. Define requerimientos, 2. Diseña la arquitectura, 3. Desarrolla el código, 4. Aplica pruebas (QA) y 5. Realiza el despliegue.");
+          } else if (query.includes('fases') || query.includes('desarrollo')) {
+            resolve("Las fases principales son: Análisis de Requisitos, Diseño de Sistemas, Codificación, Pruebas, Despliegue y Mantenimiento.");
+          } else if (query.includes('evaluacion') || query.includes('examen') || query.includes('preguntas')) {
+            resolve("Generando cuestionario: 1. ¿Qué es la arquitectura MVC? 2. ¿Diferencia entre SQL y NoSQL? 3. ¿Qué es una API REST?");
+          } else if (query.includes('investigacion') || query.includes('bibliografia')) {
+            resolve("Te recomiendo revisar literatura académica en Scopus o IEEE Xplore. Un libro clave es 'Ingeniería de Software' de Ian Sommerville.");
+          } else {
+            resolve("Entendido. Como asistente de Ingeniería de Sistemas, estoy listo para guiarte en tus consultas de proyectos, horarios o metodologías.");
+          }
+        }, 1000);
+      });
+    }
+  </script>
 </body>
 </html>

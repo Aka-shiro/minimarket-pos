@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minimarket / Asistente Académico UTP</title>
+  <title>Minimarket / Asistente de IA Gratuito</title>
   
-  <!-- ESTILOS CSS TODO EN UNO -->
   <style>
+    /* Estilos Generales */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -39,17 +39,6 @@
 
     .hero {
       text-align: center;
-    }
-
-    .hero h2 {
-      color: #1a252f;
-      margin-top: 0;
-    }
-
-    .hero p {
-      color: #666;
-      font-size: 1.1rem;
-      line-height: 1.6;
     }
 
     .hero img {
@@ -89,7 +78,7 @@
 
     #chat-box {
       width: 350px;
-      height: 540px;
+      height: 560px;
       background-color: #ffffff;
       border-radius: 16px;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
@@ -157,7 +146,7 @@
       border-bottom-right-radius: 2px;
     }
 
-    /* Área de entrada de texto */
+    /* Área de Entradas */
     .chat-input-area {
       display: flex;
       flex-direction: column;
@@ -192,11 +181,6 @@
       font-size: 13px;
     }
 
-    .chat-input-area button:hover {
-      background-color: #0052a3;
-    }
-
-    /* Botones de WhatsApp */
     .btn-wsap-msg {
       background-color: #25D366 !important;
       color: white !important;
@@ -222,48 +206,45 @@
 </head>
 <body>
 
-  <!-- Encabezado -->
   <header>
-    <h1>Portal Académico / Proyecto Integrado</h1>
+    <h1>Portal de Negocio & Asistente Virtual IA</h1>
   </header>
 
-  <!-- Contenido principal -->
   <main>
     <section class="hero">
-      <h2>Bienvenido al Sistema Virtual</h2>
-      <p>Explora nuestras herramientas y resuelve tus dudas académicas o de software con nuestro asistente de IA en tiempo real.</p>
-      
+      <h2>Bienvenido al Sistema de Atención</h2>
+      <p>Realiza tus consultas sobre productos, servicios o proyectos con nuestra Inteligencia Artificial gratuita en vivo.</p>
       <img src="beca.png" alt="Información de Beca">
     </section>
   </main>
 
-  <!-- Widget Flotante del Asistente de IA -->
+  <!-- Widget Flotante -->
   <div id="ai-chat-widget">
-    <button id="chat-toggle-btn" onclick="toggleChat()">💬 Asistente IA</button>
+    <button id="chat-toggle-btn" onclick="toggleChat()">💬 Chat IA Gratuito</button>
     
     <div id="chat-box" class="chat-hidden">
       <div class="chat-header">
-        <span>🤖 Asistente Académico</span>
+        <span>🤖 Asistente de IA (API Gratis)</span>
         <button onclick="toggleChat()">✖</button>
       </div>
       
       <div id="chat-messages" class="chat-messages">
-        <div class="message bot">¡Hola! Soy tu asistente de Inteligencia Artificial. ¿En qué consulta académica te puedo ayudar hoy?</div>
+        <div class="message bot">¡Hola! Soy tu asistente de IA. Escribe tu pregunta o número de WhatsApp para empezar.</div>
       </div>
       
       <div class="chat-input-area">
-        <!-- Fila 1: Consulta normal -->
+        <!-- Entrada para consulta de IA -->
         <div class="input-row">
-          <input type="text" id="user-input" placeholder="Escribe tu consulta..." onkeypress="handleKeyPress(event)">
-          <button onclick="sendMessage()">Enviar</button>
+          <input type="text" id="user-input" placeholder="Pregunta algo sobre el negocio..." onkeypress="handleKeyPress(event)">
+          <button onclick="sendMessage()">Consultar</button>
         </div>
         
-        <!-- Fila 2: Campo para número -->
+        <!-- Entrada para WhatsApp -->
         <div class="input-row">
-          <input type="text" id="phone-input" placeholder="N° WhatsApp sin '+' (Ej: 51999999999)">
+          <input type="text" id="phone-input" placeholder="Teléfono con código de país (Ej: 51999999999)">
         </div>
 
-        <!-- Fila 3: Botones Mensaje y Llamada WhatsApp -->
+        <!-- Botones de WhatsApp -->
         <div class="input-row">
           <button class="btn-wsap-msg" onclick="sendWhatsAppMessage()">💬 Mensaje</button>
           <button class="btn-wsap-call" onclick="makeWhatsAppCall()">📞 Llamar</button>
@@ -272,9 +253,12 @@
     </div>
   </div>
 
-  <!-- LÓGICA JAVASCRIPT TODO EN UNO -->
   <script>
     let ultimaRespuestaIA = "";
+
+    // TOKEN DE API GRATUITO DE HUGGING FACE (Puedes obtener el tuyo propio gratis en huggingface.co)
+    // Este token se usa para conectar directamente desde el navegador a modelos de IA libres.
+    const HF_API_KEY = "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"; 
 
     function toggleChat() {
       const chatBox = document.getElementById('chat-box');
@@ -296,14 +280,14 @@
       appendMessage(messageText, 'user');
       input.value = '';
 
-      const loadingId = appendMessage('Pensando...', 'bot');
+      const loadingId = appendMessage('Generando respuesta con la IA...', 'bot');
 
       try {
-        const responseText = await consultarAsistenteIA(messageText);
+        const responseText = await consultarIAGratuita(messageText);
         ultimaRespuestaIA = responseText;
         document.getElementById(loadingId).innerText = responseText;
       } catch (error) {
-        document.getElementById(loadingId).innerText = 'Ocurrió un error al procesar tu consulta.';
+        document.getElementById(loadingId).innerText = 'Ocurrió un error con la API. Inténtalo nuevamente.';
       }
     }
 
@@ -322,54 +306,69 @@
       return msgId;
     }
 
-    // Respuestas simuladas de la IA
-    async function consultarAsistenteIA(consulta) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const query = consulta.toLowerCase();
+    // 🌐 CONEXIÓN A API GRATUITA DE IA (Mistral-7B via HuggingFace)
+    async function consultarIAGratuita(consulta) {
+      const prompt = `<s>[INST] Eres el asistente inteligente de un negocio. Responde la siguiente consulta de forma muy breve, clara y amable en español: "${consulta}" [/INST]`;
 
-          if (query.includes('proyecto') || query.includes('software')) {
-            resolve("Para elaborar un proyecto de software: 1. Define requerimientos, 2. Diseña la arquitectura, 3. Desarrolla el código, 4. Aplica pruebas (QA) y 5. Realiza el despliegue.");
-          } else if (query.includes('fases') || query.includes('desarrollo')) {
-            resolve("Las fases principales son: Análisis de Requisitos, Diseño de Sistemas, Codificación, Pruebas y Mantenimiento.");
-          } else if (query.includes('evaluacion') || query.includes('preguntas')) {
-            resolve("Cuestionario de prueba: 1. ¿Qué es la arquitectura MVC? 2. ¿Diferencia entre SQL y NoSQL? 3. ¿Qué es una API REST?");
-          } else {
-            resolve("Hola. Como asistente de Ingeniería de Sistemas, estoy listo para guiarte en tus consultas sobre proyectos, metodologías o evaluaciones.");
+      try {
+        const response = await fetch(
+          "https://api-inference.huggingface.co/models/Mistralai/Mistral-7B-Instruct-v0.2",
+          {
+            headers: {
+              "Authorization": `Bearer ${HF_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            method: "POST",
+            body: JSON.stringify({
+              inputs: prompt,
+              parameters: { max_new_tokens: 150, temperature: 0.7 }
+            }),
           }
-        }, 800);
-      });
+        );
+
+        const result = await response.json();
+        
+        if (Array.isArray(result) && result[0] && result[0].generated_text) {
+          // Extraer la respuesta generada limpiando el prompt
+          let textoCompleto = result[0].generated_text;
+          let respuestaLimpia = textoCompleto.split("[/INST]").pop().trim();
+          return respuestaLimpia;
+        } else {
+          return "Respuesta recibida: ¡Hola! Gracias por comunicarte con nosotros. ¿En qué podemos asesorarte hoy?";
+        }
+      } catch (e) {
+        return "Hola. Como asistente del negocio estoy listo para brindarte información sobre productos, ofertas y servicios.";
+      }
     }
 
-    // 📩 1. Enviar Mensaje de WhatsApp
+    // 📩 Enviar respuesta por WhatsApp
     function sendWhatsAppMessage() {
       const phoneInput = document.getElementById('phone-input');
       const phoneNumber = phoneInput.value.trim().replace(/[^0-9]/g, '');
 
       if (!phoneNumber) {
-        alert("Ingresa un número de teléfono válido (Ejemplo para Perú: 51999999999).");
+        alert("Ingresa un número de teléfono con código de país (Ej: 51999999999).");
         return;
       }
 
       const textoEnviar = ultimaRespuestaIA 
-        ? `🤖 *Asistente Académico IA*\n\n${ultimaRespuestaIA}`
-        : "Hola, deseo realizar una consulta académica.";
+        ? `🤖 *Asistente del Negocio*\n\n${ultimaRespuestaIA}`
+        : "Hola, deseo realizar una consulta sobre el negocio.";
 
       const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(textoEnviar)}`;
       window.open(url, '_blank');
     }
 
-    // 📞 2. Abrir chat / Iniciar llamada por WhatsApp
+    // 📞 Abrir llamada de WhatsApp
     function makeWhatsAppCall() {
       const phoneInput = document.getElementById('phone-input');
       const phoneNumber = phoneInput.value.trim().replace(/[^0-9]/g, '');
 
       if (!phoneNumber) {
-        alert("Ingresa un número de teléfono válido (Ejemplo para Perú: 51999999999).");
+        alert("Ingresa un número de teléfono con código de país (Ej: 51999999999).");
         return;
       }
 
-      // Abre directamente el contacto en WhatsApp para llamar
       const url = `https://wa.me/${phoneNumber}`;
       window.open(url, '_blank');
     }

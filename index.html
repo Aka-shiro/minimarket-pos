@@ -5,8 +5,211 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Minimarket / Asistente Académico UTP</title>
   
-  <!-- Enlace exacto a tu archivo CSS -->
-  <link rel="stylesheet" href="css/estilo.css">
+  <!-- ESTILOS CSS TODO EN UNO -->
+  <style>
+    /* Estilos Generales */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f6f9;
+      color: #333;
+    }
+
+    header {
+      background-color: #1a252f;
+      color: #ffffff;
+      padding: 25px 20px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 30px;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .hero {
+      text-align: center;
+    }
+
+    .hero h2 {
+      color: #1a252f;
+      margin-top: 0;
+    }
+
+    .hero p {
+      color: #666;
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+
+    .hero img {
+      max-width: 250px;
+      height: auto;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Widget Flotante del Chat de IA */
+    #ai-chat-widget {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      z-index: 1000;
+    }
+
+    #chat-toggle-btn {
+      background-color: #0066cc;
+      color: #ffffff;
+      border: none;
+      padding: 14px 22px;
+      border-radius: 30px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+      transition: all 0.2s ease-in-out;
+    }
+
+    #chat-toggle-btn:hover {
+      transform: translateY(-2px);
+      background-color: #0052a3;
+    }
+
+    #chat-box {
+      width: 350px;
+      height: 500px;
+      background-color: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: absolute;
+      bottom: 65px;
+      right: 0;
+    }
+
+    .chat-hidden {
+      display: none !important;
+    }
+
+    .chat-header {
+      background-color: #0066cc;
+      color: #ffffff;
+      padding: 14px 18px;
+      font-weight: 600;
+      font-size: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-header button {
+      background: none;
+      border: none;
+      color: #ffffff;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background-color: #f8f9fa;
+    }
+
+    .message {
+      max-width: 82%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 13.5px;
+      line-height: 1.45;
+      word-wrap: break-word;
+    }
+
+    .message.bot {
+      background-color: #e9ecef;
+      color: #212529;
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+    }
+
+    .message.user {
+      background-color: #0066cc;
+      color: #ffffff;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+
+    /* Área de entrada de texto */
+    .chat-input-area {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      background-color: #ffffff;
+      border-top: 1px solid #eaeaea;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .chat-input-area input {
+      flex: 1;
+      border: 1px solid #ced4da;
+      padding: 9px 14px;
+      border-radius: 20px;
+      outline: none;
+      font-size: 13px;
+    }
+
+    .chat-input-area button {
+      background-color: #0066cc;
+      color: #ffffff;
+      border: none;
+      padding: 9px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .chat-input-area button:hover {
+      background-color: #0052a3;
+    }
+
+    /* Botón especial para enviar por WhatsApp */
+    .btn-wsap {
+      background-color: #25D366 !important;
+      color: white !important;
+      font-weight: bold;
+      width: 100%;
+      border-radius: 12px !important;
+    }
+
+    .btn-wsap:hover {
+      background-color: #128C7E !important;
+    }
+  </style>
 </head>
 <body>
 
@@ -35,18 +238,118 @@
         <span>🤖 Asistente Académico</span>
         <button onclick="toggleChat()">✖</button>
       </div>
+      
       <div id="chat-messages" class="chat-messages">
-        <div class="message bot">¡Hola! Soy tu asistente de Inteligencia Artificial. ¿En qué consulta académica o de software te puedo ayudar hoy?</div>
+        <div class="message bot">¡Hola! Soy tu asistente de Inteligencia Artificial. ¿En qué consulta académica te puedo ayudar hoy?</div>
       </div>
+      
       <div class="chat-input-area">
-        <input type="text" id="user-input" placeholder="Escribe tu mensaje..." onkeypress="handleKeyPress(event)">
-        <button onclick="sendMessage()">Enviar</button>
+        <div class="input-row">
+          <input type="text" id="user-input" placeholder="Escribe tu consulta..." onkeypress="handleKeyPress(event)">
+          <button onclick="sendMessage()">Enviar</button>
+        </div>
+        
+        <div class="input-row">
+          <input type="text" id="phone-input" placeholder="N° WhatsApp (+51...)">
+          <button class="btn-wsap" onclick="sendToWhatsApp()">Enviar a WhatsApp 📱</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Enlace exacto a tu archivo JavaScript -->
-  <script src="js/app.js"></script>
+  <!-- LOGICA JAVASCRIPT TODO EN UNO -->
+  <script>
+    let ultimaRespuestaIA = "";
 
+    function toggleChat() {
+      const chatBox = document.getElementById('chat-box');
+      if (chatBox) chatBox.classList.toggle('chat-hidden');
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('user-input');
+      const messageText = input.value.trim();
+
+      if (!messageText) return;
+
+      appendMessage(messageText, 'user');
+      input.value = '';
+
+      const loadingId = appendMessage('Pensando...', 'bot');
+
+      try {
+        const responseText = await consultarAsistenteIA(messageText);
+        ultimaRespuestaIA = responseText;
+        document.getElementById(loadingId).innerText = responseText;
+      } catch (error) {
+        document.getElementById(loadingId).innerText = 'Ocurrió un error al procesar tu consulta.';
+      }
+    }
+
+    function appendMessage(text, sender) {
+      const messagesContainer = document.getElementById('chat-messages');
+      const msgDiv = document.createElement('div');
+      const msgId = 'msg-' + Date.now();
+
+      msgDiv.id = msgId;
+      msgDiv.classList.add('message', sender);
+      msgDiv.innerText = text;
+
+      messagesContainer.appendChild(msgDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+      return msgId;
+    }
+
+    // Simulación de respuestas de la IA (Entorno Académico e Ingeniería)
+    async function consultarAsistenteIA(consulta) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const query = consulta.toLowerCase();
+
+          if (query.includes('proyecto') || query.includes('software')) {
+            resolve("Para elaborar un proyecto de software: 1. Define requerimientos, 2. Diseña la arquitectura, 3. Desarrolla el código, 4. Aplica pruebas (QA) y 5. Realiza el despliegue.");
+          } else if (query.includes('fases') || query.includes('desarrollo')) {
+            resolve("Las fases principales son: Análisis de Requisitos, Diseño de Sistemas, Codificación, Pruebas y Mantenimiento.");
+          } else if (query.includes('evaluacion') || query.includes('preguntas')) {
+            resolve("Cuestionario de prueba: 1. ¿Qué es la arquitectura MVC? 2. ¿Diferencia entre SQL y NoSQL? 3. ¿Qué es una API REST?");
+          } else if (query.includes('investigacion') || query.includes('bibliografia')) {
+            resolve("Te recomiendo consultar Scopus o IEEE Xplore. Un libro clave es 'Ingeniería de Software' de Ian Sommerville.");
+          } else {
+            resolve("Hola. Como asistente de Ingeniería de Sistemas, estoy listo para guiarte en tus consultas sobre proyectos, metodologías o evaluaciones.");
+          }
+        }, 800);
+      });
+    }
+
+    // Función para enviar la respuesta por WhatsApp Web sin registros
+    function sendToWhatsApp() {
+      const phoneInput = document.getElementById('phone-input');
+      const phoneNumber = phoneInput.value.trim().replace(/\s+/g, '');
+
+      if (!phoneNumber) {
+        alert("Por favor ingresa un número de teléfono con código de país (Ejemplo: +51999999999).");
+        return;
+      }
+
+      if (!ultimaRespuestaIA) {
+        alert("Primero realiza una pregunta en el chat para obtener la respuesta que enviarás por WhatsApp.");
+        return;
+      }
+
+      // Crear URL oficial de la API de WhatsApp
+      const mensajeEncoded = encodeURIComponent(`🤖 *Asistente Académico IA*\n\n${ultimaRespuestaIA}`);
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${mensajeEncoded}`;
+
+      // Abrir en una nueva pestaña
+      window.open(whatsappUrl, '_blank');
+    }
+  </script>
 </body>
 </html>
